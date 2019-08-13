@@ -1,0 +1,148 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: sample-service-golang # NOTE: update this with your service name
+#app: your-app-name
+#tenant: your-tenant-name
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+frameworkVersion: ">=1.28.0 <2.0.0"
+
+provider:
+  name: aws
+  runtime: go1.x
+  stage: dev
+  region: ap-southeast-1
+  environment:
+      DYNAMO_TABLE_NAME_ONE: tableone-${self:provider.stage}
+      DYNAMO_TABLE_NAME_TWO: tabletwo-${self:provider.stage}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: 
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:*"
+        # - "arn:aws:dynamodb:*:*:*"
+
+# you can overwrite defaults here
+#  stage: dev
+#  region: us-east-1
+
+# you can add statements to the Lambda function's IAM Role here
+#  iamRoleStatements:
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:ListBucket"
+#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:PutObject"
+#      Resource:
+#        Fn::Join:
+#          - ""
+#          - - "arn:aws:s3:::"
+#            - "Ref" : "ServerlessDeploymentBucket"
+#            - "/*"
+
+# you can define service wide environment variables here
+#  environment:
+#    variable1: value1
+
+package:
+ exclude:
+   - ./**
+ include:
+   - ./bin/**
+functions:
+  sample_test_function:
+    handler: bin/sample_test_function
+    environment:
+      SAMPLE_PRIVATE_ENV: hello_this_is_just_sample
+    events:
+      - http:
+          path: sample_test_function
+          method: get
+  movie_list:
+    handler: bin/movie_list
+    events:
+      - http:
+          path: movies/{year}
+          method: get
+  get_movie:
+    handler: bin/get_movie
+    events:
+      - http:
+          path: movies/{year}/{title}
+          method: get
+  insert_movie:
+    handler: bin/insert_movie
+    events:
+      - http:
+          path: movies
+          method: post
+  delete_movie:
+    handler: bin/delete_movie
+    events:
+      - http:
+          path: movies/{year}/{title}
+          method: delete
+  update_movie:
+    handler: bin/update_movie
+    events:
+      - http:
+          path: movies
+          method: put
+
+resources:
+  Resources:
+    DynamoDbTableOne:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: year
+            AttributeType: N
+          - AttributeName: title
+            AttributeType: S
+        KeySchema:
+          - AttributeName: year
+            KeyType: HASH
+          - AttributeName: title
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: 'tableone-${opt:stage, self:provider.stage}'
+    DynamoDbTableTwo:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: 'tabletwo-${opt:stage, self:provider.stage}'
+
+
+

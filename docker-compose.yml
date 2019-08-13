@@ -1,0 +1,10 @@
+version: '3.0'
+services:
+  golang:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: serverless_sample
+    volumes:
+      - './:/go/src/serverless:rw'
+    tty: true
