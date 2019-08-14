@@ -143,6 +143,3 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: 'tabletwo-${opt:stage, self:provider.stage}'
-
-
-
